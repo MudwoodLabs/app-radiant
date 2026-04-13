@@ -1,4 +1,4 @@
 pytest>=6.2.1
 ecdsa>=0.16.1,<0.17.0
 ragger[speculos,ledgerwallet]>=1.37.0
-ledger-bitcoin
+git+https://github.com/LedgerHQ/app-bitcoin-new.git@master_key_fingerprint_legacy#egg=ledger-bitcoin&subdirectory=bitcoin_client
