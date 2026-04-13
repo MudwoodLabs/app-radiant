@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.4.11] - 2026-04-13
+
+### Added
+
+- `INS_GET_MASTER_FINGERPRINT` to obtain the master key fingerprint
+
+### Modified
+
+- Derivation Path Hardening applied to `bitcoin_testnet_legacy`
+
 ## [2.4.10] - 2026-02-19
 
 ### Modified
