@@ -27,7 +27,7 @@ APPVERSION_P = 10
 APPDEVELOPPER="Ledger"
 APPCOPYRIGHT="(c) 2024 Ledger"
 
-VARIANT_VALUES = bitcoin_testnet_legacy bitcoin_legacy bitcoin_cash bitcoin_gold litecoin dogecoin dash horizen komodo stratis peercoin pivx viacoin vertcoin digibyte bitcoin_private firo gamecredits zclassic nix lbry ravencoin hydra hydra_testnet xrhodium
+VARIANT_VALUES = bitcoin_testnet_legacy bitcoin_legacy bitcoin_cash bitcoin_gold litecoin dogecoin dash horizen komodo stratis peercoin pivx viacoin vertcoin digibyte bitcoin_private firo gamecredits zclassic nix lbry ravencoin hydra hydra_testnet xrhodium radiant
 
 # Application source files
 # There is no additional sources for bitcoin
@@ -89,6 +89,26 @@ COIN_KIND=COIN_KIND_BITCOIN_CASH
 COIN_FORKID=0
 APPNAME ="Bitcoin Cash"
 PATH_APP_LOAD_PARAMS = "*/145'" "*/0'" "4541509'" "45'"
+
+else ifeq ($(COIN),radiant)
+# Radiant (RXD)
+# Surgical blend: BCH-style SIGHASH_FORKID signing path + BTC-legacy base58 address display.
+# Sighash byte-identical to BCH (radiant-node src/script/sighashtype.h:17).
+# Address layout same as BTC mainnet (P2PKH version 0).
+# SLIP-44 coin type: 512 (https://github.com/satoshilabs/slips/blob/master/slip-0044.md).
+# Strict path lock: PATH_APP_LOAD_PARAMS lists only "*/512'" — no Bitcoin-namespace co-derivation.
+BIP44_COIN_TYPE=512
+BIP44_COIN_TYPE_2=512
+COIN_P2PKH_VERSION=0
+COIN_P2SH_VERSION=5
+COIN_FAMILY=1
+COIN_COINID=\"Radiant\"
+COIN_COINID_NAME="Radiant"
+COIN_COINID_SHORT=\"RXD\"
+COIN_KIND=COIN_KIND_RADIANT
+COIN_FORKID=0
+APPNAME ="Radiant"
+PATH_APP_LOAD_PARAMS = "*/512'"
 
 else ifeq ($(COIN),bitcoin_gold)
 # Bitcoin Gold

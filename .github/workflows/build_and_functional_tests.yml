@@ -1,10 +1,8 @@
-name: Build (bootstrap)
+name: Build (Phase 1)
 
-# Phase 0 bootstrap: self-contained build that invokes the pinned Ledger builder
-# image directly rather than via LedgerHQ/ledger-app-workflows reusable workflows.
-# Why direct: (a) the reusable workflow call was failing with startup_failure on
-# this fork in a non-debuggable way, (b) direct invocation lets us pin the builder
-# image by digest, which the reusable workflow hardcodes to `:latest`.
+# Matrix-builds both variants:
+# - bitcoin_cash: regression smoke test — proves we haven't broken upstream
+# - radiant: the new v1 variant we're shipping
 
 on:
   workflow_dispatch:
@@ -19,11 +17,14 @@ on:
 
 jobs:
   build:
-    name: Build COIN=bitcoin_cash for Nano S Plus
+    name: Build COIN=${{ matrix.coin }} for Nano S Plus
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        coin: [bitcoin_cash, radiant]
     container:
       # Pinned multi-arch index digest (resolved 2026-04-15).
-      # Bump deliberately; re-verify reproducibility when bumping.
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder-lite@sha256:b82bfff7862d890ea0c931f310ed1e9bce6efe2fac32986a2561aaa08bfc2834
 
     steps:
@@ -38,14 +39,15 @@ jobs:
           PYTHONHASHSEED: "0"
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
-          make COIN=bitcoin_cash BOLOS_SDK=$NANOSP_SDK
+          make COIN=${{ matrix.coin }} BOLOS_SDK=$NANOSP_SDK
           sha256sum bin/app.hex bin/app.elf > bin/SHA256SUMS
+          echo "=== bin/SHA256SUMS for COIN=${{ matrix.coin }} ==="
           cat bin/SHA256SUMS
 
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: compiled_app_binaries
+          name: compiled_app_${{ matrix.coin }}
           path: |
             bin/app.hex
             bin/app.elf
