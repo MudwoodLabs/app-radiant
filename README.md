@@ -1,6 +1,132 @@
+# Radiant Ledger App (Community)
+
+**Sideloadable Ledger Nano S Plus app for signing Radiant (RXD) transactions.**
+
+Hardware-wallet signing for the Radiant blockchain. Private keys stay on-device. Forked from [LedgerHQ/app-bitcoin](https://github.com/LedgerHQ/app-bitcoin); adds a `radiant` Makefile variant and an on-device `hashOutputHashes` computation that Radiant consensus requires (and BCH's Ledger app does not produce).
+
+---
+
+## Status: BETA
+
+First mainnet-confirmed Radiant transaction signed by this app: [`de3574979f986616b4152c4294b85562318292490d3587d8fe32aff456893743`](https://explorer.radiantblockchain.org/tx/de3574979f986616b4152c4294b85562318292490d3587d8fe32aff456893743) (block 420762, 2026-04-15).
+
+Current tag: **`v0.0.3-sighash-fix`**
+
+Community-distributed. Not reviewed by Ledger. The device will show a persistent **"This app is not genuine"** banner when the app is open — that is expected for any unsigned community-built Ledger app and cannot be removed.
+
+---
+
+## What works (v1 scope)
+
+- **Nano S Plus** — other devices not supported yet
+- **P2PKH sends and receives** (standard `1…` Radiant addresses)
+- **SLIP-44 coin type 512**, BIP44 derivation path `m/44'/512'/0'/0/x`
+- Integration with a [patched Electron Radiant](https://github.com/Zyrtnin-org/Electron-Wallet/tree/radiant-ledger-512) (branch `radiant-ledger-512`)
+- Reproducible CI builds; SHA256s published on every release
+
+## What doesn't work yet (v2 scope)
+
+- Glyph / NFT signing (device rejects outputs containing `OP_PUSHINPUTREF*` opcodes)
+- P2SH destinations (`3…` addresses) and OP_RETURN memos
+- Nano X, Stax, Flex
+
+## Important: derivation path differs from Samara/Electron/Chainbow
+
+Existing Radiant wallets use `m/44'/0'/...` (Bitcoin's SLIP-44 coin type). This Ledger app uses **`m/44'/512'/...`** per the SLIP-0044 registry entry for RXD. If you want to move RXD onto this Ledger, send from your existing wallet's address to your new Ledger-derived address. Standard "upgrading to hardware wallet" flow — the old wallet isn't locked out, you just move the coins.
+
+---
+
+## Install
+
+Prerequisites on Linux:
+
+```bash
+pip install ledgerblue
+wget -q -O - https://raw.githubusercontent.com/LedgerHQ/udev-rules/master/add_udev_rules.sh | sudo bash
+# Unplug + replug device
+```
+
+Build the app (requires Docker, ~2GB builder image download on first run):
+
+```bash
+git clone --recurse-submodules https://github.com/Zyrtnin-org/app-radiant.git
+cd app-radiant
+git checkout v0.0.3-sighash-fix
+git submodule update --init --recursive
+
+docker run --rm \
+  -v "$(pwd):/app" \
+  -u "$(id -u):$(id -g)" \
+  ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder-lite@sha256:b82bfff7862d890ea0c931f310ed1e9bce6efe2fac32986a2561aaa08bfc2834 \
+  bash -c "cd /app && make COIN=radiant BOLOS_SDK=\$NANOSP_SDK"
+```
+
+Sideload to device (Nano S Plus unlocked, on dashboard):
+
+```bash
+python3 -m ledgerblue.loadApp \
+  --targetId 0x33100004 \
+  --targetVersion="" \
+  --apiLevel 25 \
+  --tlv \
+  --curve secp256k1 \
+  --path "44'/512'" \
+  --appFlags 0x0 \
+  --fileName bin/app.hex \
+  --appName "Radiant" \
+  --appVersion "0.0.3" \
+  --dataSize 512 \
+  --installparamsSize 64 \
+  --delete
+```
+
+Approve prompts on-device ("Allow unsafe manager" then "Install app Radiant from unverified source"). See [`BUILDER.md`](BUILDER.md) for reproducibility details.
+
+## Use with Electron Radiant
+
+Patched plugin lives at [`Zyrtnin-org/Electron-Wallet@radiant-ledger-512`](https://github.com/Zyrtnin-org/Electron-Wallet/tree/radiant-ledger-512). Clone, run from source, wizard defaults will pick up `m/44'/512'/0'` automatically.
+
+**Important workflow order**: open the Radiant app on the device BEFORE you open the wallet in Electron Radiant. If the device is on the dashboard when Electron Radiant tries to talk to it, you'll get an `SW 6702` error.
+
+---
+
+## Looking for testers
+
+Have a Nano S Plus and some spare RXD? Open an issue here or ping on the Radiant Discord to get the pre-release install working on your device. We're validating across firmware versions and tx shapes before wider release.
+
+## Related repos
+
+- [`Zyrtnin-org/lib-app-bitcoin`](https://github.com/Zyrtnin-org/lib-app-bitcoin) branch `radiant-v1` — submodule with the `hashOutputHashes` C implementation
+- [`Zyrtnin-org/Electron-Wallet`](https://github.com/Zyrtnin-org/Electron-Wallet) branch `radiant-ledger-512` — host-side wallet plugin
+- [`Zyrtnin-org/radiant-ledger-app`](https://github.com/Zyrtnin-org/radiant-ledger-app) — planning, Python oracle, golden-vector fixtures, investigation notes
+
+---
+
+## Technical background
+
+Radiant's signature preimage inserts a 32-byte `hashOutputHashes` field between `nSequence` and `hashOutputs` ([`radiant-node/src/script/interpreter.cpp:2636-2650`](https://github.com/RadiantBlockchain/radiant-node/blob/master/src/script/interpreter.cpp#L2636)). BCH's signing path doesn't produce this field, so stock BCH-family Ledger apps produce signatures that Radiant mainnet rejects.
+
+This app's C diff extends `lib-app-bitcoin` to compute `hashOutputHashes` on-device from the streaming output bytes it already hashes for the standard `hashedOutputs` field. Zero additional host-trust introduced. Full arc documented at [`radiant-ledger-app`](https://github.com/Zyrtnin-org/radiant-ledger-app).
+
+---
+
+## Credits
+
+- Base app forked from [LedgerHQ/app-bitcoin](https://github.com/LedgerHQ/app-bitcoin)
+- Radiant network: [RadiantBlockchain](https://github.com/RadiantBlockchain)
+- Radiant JS preimage reference: [radiantjs](https://github.com/RadiantBlockchain/radiantjs)
+
+License: Apache-2.0 (inherited from upstream app-bitcoin).
+
+---
+
+<details>
+<summary>Upstream LedgerHQ/app-bitcoin README (preserved for reference)</summary>
+
 # Ledger Legacy Bitcoin Application
 
 ## Legacy bitcoin application
+
 Bitcoin wallet application for Ledger devices up to version 1.6.5.
 
 > **Warning**
@@ -11,91 +137,6 @@ Bitcoin wallet application for Ledger devices up to version 1.6.5.
 
 Ledger Blue is not maintained anymore, but the app can still be compiled for this target using the branch `blue-final-release`.
 
-The original beta specification can be found at https://ledgerhq.github.io/btchip-doc/bitcoin-technical-beta.html - with the regular set of APDUs for standard wallet operations enabled.
+The original beta specification can be found at https://ledgerhq.github.io/btchip-doc/bitcoin-technical-beta.html — with the regular set of APDUs for standard wallet operations enabled.
 
-## How to use
-
-This application adheres with Ledger latest application guidelines.
-
-You can refer to [app-boilerplate Quick start guide](https://github.com/LedgerHQ/app-boilerplate/blob/master/README.md#quick-start-guide) for comprehensive up-to-date instructions.
-
-## Are you developing a Ledger device application?
-- See the developers’ documentation on the [Developer Portal](https://developers.ledger.com/)
-- [Go on Discord](https://developers.ledger.com/discord-pro/) to chat with developer support and the developer community.
-
-## Client Library
-Include the necessary headers (copied from the js/ directory) in your web page
-
-```html
-<head>
-  <script src="thirdparty/q.js"></script>
-  <script src="thirdparty/async.min.js"></script>
-  <script src="thirdparty/u2f-api.js"></script>
-  <script src="dist/ledger-btc.js"></script>
-</head>
-```
-
-Create a communication object
-
-```javascript
-var dongle = new LedgerBtc(20);
-```
-
-For each UTXO included in your transaction, create a transaction object from the raw serialized version of the transaction used in this UTXO
-
-```javascript
-var tx1 = dongle.splitTransaction("01000000014ea60aeac5252c14291d428915bd7ccd1bfc4af009f4d4dc57ae597ed0420b71010000008a47304402201f36a12c240dbf9e566bc04321050b1984cd6eaf6caee8f02bb0bfec08e3354b022012ee2aeadcbbfd1e92959f57c15c1c6debb757b798451b104665aa3010569b49014104090b15bde569386734abf2a2b99f9ca6a50656627e77de663ca7325702769986cf26cc9dd7fdea0af432c8e2becc867c932e1b9dd742f2a108997c2252e2bdebffffffff0281b72e00000000001976a91472a5d75c8d2d0565b656a5232703b167d50d5a2b88aca0860100000000001976a9144533f5fb9b4817f713c48f0bfe96b9f50c476c9b88ac00000000");
-
-var tx2 = dongle.splitTransaction("...")
-```
-
-To sign a transaction involving standard (P2PKH) inputs, call createPaymentTransactionNew_async with the folowing parameters
-
- - `inputs` is an array of [ transaction, output_index, optional redeem script, optional sequence ] where
-   - transaction is the previously computed transaction object for this UTXO
-   - output_index is the output in the transaction used as input for this UTXO (counting from 0)
-   - redeem script is the optional redeem script to use when consuming a Segregated Witness input
-   - sequence is the sequence number to use for this input (when using RBF), or non present
- - `associatedKeysets` is an array of BIP 32 paths pointing to the path to the private key used for each UTXO
- - `changePath` is an optional BIP 32 path pointing to the path to the public key used to compute the change address
- - `outputScript` is the hexadecimal serialized outputs of the transaction to sign
- - `lockTime` is the optional lockTime of the transaction to sign, or default (0)
- - `sigHashType` is the hash type of the transaction to sign, or default (all)
-
-This method returns the signed transaction ready to be broadcast
-
-```javascript
-dongle.createPaymentTransactionNew_async(
-   [ [tx, 1] ],
-   ["0'/0/0"],
-   undefined,
-   "01905f0100000000001976a91472a5d75c8d2d0565b656a5232703b167d50d5a2b88ac").then(
-     function(result) { console.log(result);}).fail(
-     function(error) { console.log(error); });
-);
-```
-
-To obtain the signature of multisignature (P2SH) inputs, call signP2SHTransaction_async with the folowing parameters
-
- - `inputs` is an array of [ transaction, output_index, redeem script, optional sequence ] where
-   - transaction is the previously computed transaction object for this UTXO
-   - output_index is the output in the transaction used as input for this UTXO (counting from 0)
-   - redeem script is the mandatory redeem script associated to the current P2SH input
-   - sequence is the sequence number to use for this input (when using RBF), or non present
- - `associatedKeysets` is an array of BIP 32 paths pointing to the path to the private key used for each UTXO
- - `outputScript` is the hexadecimal serialized outputs of the transaction to sign
- - `lockTime` is the optional lockTime of the transaction to sign, or default (0)
- - `sigHashType` is the hash type of the transaction to sign, or default (all)
-
-This method returns the signed transaction ready to be broadcast
-
-```javascript
-dongle.signP2SHTransaction_async(
-   [ [tx, 1, "52210289b4a3ad52a919abd2bdd6920d8a6879b1e788c38aa76f0440a6f32a9f1996d02103a3393b1439d1693b063482c04bd40142db97bdf139eedd1b51ffb7070a37eac321030b9a409a1e476b0d5d17b804fcdb81cf30f9b99c6f3ae1178206e08bc500639853ae"] ],
-   ["0'/0/0"],
-   "01905f0100000000001976a91472a5d75c8d2d0565b656a5232703b167d50d5a2b88ac").then(
-     function(result) { console.log(result);}).fail(
-     function(error) { console.log(error); });
-);
-```
-
+</details>
