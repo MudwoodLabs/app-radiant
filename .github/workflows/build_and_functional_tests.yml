@@ -19,7 +19,7 @@ on:
 jobs:
   build_application:
     name: Build application using the reusable workflow
-    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_build.yml@2ddae7bf080353584b77bd1356c8909c5b8f8257
+    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_build.yml@v1
     with:
       upload_app_binaries_artifact: "compiled_app_binaries"
       flags: "COIN=bitcoin_cash"
