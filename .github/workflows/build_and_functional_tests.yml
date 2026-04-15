@@ -1,9 +1,10 @@
-name: Build and run functional tests using ragger through reusable workflow
+name: Build (bootstrap)
 
-# Phase 0 bootstrap simplification: only the build step runs.
-# Ragger functional tests will be re-added in Phase 2 (hardening) once Radiant-specific
-# tests exist. For the bootstrap we just need a green build to validate the pinned
-# toolchain.
+# Phase 0 bootstrap: self-contained build that invokes the pinned Ledger builder
+# image directly rather than via LedgerHQ/ledger-app-workflows reusable workflows.
+# Why direct: (a) the reusable workflow call was failing with startup_failure on
+# this fork in a non-debuggable way, (b) direct invocation lets us pin the builder
+# image by digest, which the reusable workflow hardcodes to `:latest`.
 
 on:
   workflow_dispatch:
@@ -17,9 +18,36 @@ on:
   pull_request:
 
 jobs:
-  build_application:
-    name: Build application using the reusable workflow
-    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_build.yml@v1
-    with:
-      upload_app_binaries_artifact: "compiled_app_binaries"
-      flags: "COIN=bitcoin_cash"
+  build:
+    name: Build COIN=bitcoin_cash for Nano S Plus
+    runs-on: ubuntu-latest
+    container:
+      # Pinned multi-arch index digest (resolved 2026-04-15).
+      # Bump deliberately; re-verify reproducibility when bumping.
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder-lite@sha256:b82bfff7862d890ea0c931f310ed1e9bce6efe2fac32986a2561aaa08bfc2834
+
+    steps:
+      - name: Checkout with submodule
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709  # v4.1.7
+        with:
+          submodules: recursive
+
+      - name: Build
+        env:
+          SOURCE_DATE_EPOCH: 0
+          PYTHONHASHSEED: "0"
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          make COIN=bitcoin_cash BOLOS_SDK=$NANOSP_SDK
+          sha256sum bin/app.hex bin/app.elf > bin/SHA256SUMS
+          cat bin/SHA256SUMS
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: compiled_app_binaries
+          path: |
+            bin/app.hex
+            bin/app.elf
+            bin/SHA256SUMS
+          if-no-files-found: error
