@@ -107,13 +107,13 @@ Although `RADIANT_MAX_SCRIPT_PUBKEY = 10000` in `helpers.c`, the upstream `hash_
 
 Multi-ref Glyph outputs exceeding ~75 bytes cannot be spent in v1.0. Tracked as a future enhancement.
 
-### 5. Conflicting push-ref opcodes not detected
+### 5. ~~Conflicting push-ref opcodes not detected~~ — fixed in v0.0.7
 
-If a script has `OP_PUSHINPUTREF <ref>` and `OP_DISALLOWPUSHINPUTREF <same_ref>` in the same output, the Python oracle rejects it (matches radiantjs consensus). The device accepts it silently. Mainnet consensus would reject the resulting tx anyway, so this is not an exploitable attack — but it can produce confusing "my signature verifies locally but mainnet rejects" behavior. Fix tracked for v0.0.7.
+Previously: if a script had `OP_PUSHINPUTREF <ref>` and `OP_DISALLOWPUSHINPUTREF <same_ref>` in the same output, the Python oracle rejected it (matching radiantjs consensus) but the device accepted it silently. As of v0.0.7, the device tracks disallow-refs in a parallel accumulator and rejects with `SW_INCORRECT_DATA` at output-emission time if any overlap with push-refs is detected.
 
-### 6. Integer wrap in PUSHDATA4 length
+### 6. ~~Integer wrap in PUSHDATA4 length~~ — fixed in v0.0.7
 
-If a script contains `OP_PUSHDATA4` declaring a 4GB payload but the script is shorter, the opcode walker's skip counter wraps. Contained by the outer script-length bound (the tx is rejected for other reasons), so not exploitable. Defensive check tracked for v0.0.7.
+Previously: a script with `OP_PUSHDATA4` declaring a 4GB payload could wrap the skip counter. Contained by outer bounds so non-exploitable, but state-machine hygiene was poor. As of v0.0.7, all length-taking opcodes (direct push 0x01-0x4B, OP_PUSHDATA1/2/4, push-ref opcodes 0xD0/D1/D2/D3/D8) validate that the declared payload fits in the remaining script bytes before entering skip/read state.
 
 ### 7. Wallet-side UX gaps
 
@@ -125,7 +125,7 @@ If a script contains `OP_PUSHDATA4` declaring a 4GB payload but the script is sh
 
 ```bash
 cd app-radiant
-git checkout v0.0.6
+git checkout v0.0.7
 git submodule update --init --recursive
 
 docker run --rm -v "$(pwd):/app" -u "$(id -u):$(id -g)" \
@@ -133,7 +133,7 @@ docker run --rm -v "$(pwd):/app" -u "$(id -u):$(id -g)" \
   bash -c "cd /app && make COIN=radiant BOLOS_SDK=\$NANOSP_SDK"
 
 sha256sum bin/app.hex
-# Expected: 51bb1da11b64785d51d80e65594bda94da1d3307177c460de43c3dafe0bddab7
+# Expected: 7e51dbff88a42752fdff333ee0f26ace9e740e7381c99737ead1f65da7318f0f
 ```
 
 If your SHA256 doesn't match the release, either:
@@ -169,6 +169,7 @@ python3 test_device_glyph_sign.py   # Glyph output — sig verifies against orac
 
 ## Version History
 
+- **v0.0.7** (2026-04-16): Disallow-ref vs push-ref conflict detection, PUSHDATA/push-ref bounds checks (closes remaining FSM audit findings)
 - **v0.0.6** (2026-04-16): `sign_message` path-lock, `output_script_is_regular` OOB guard, Radiant-branded icons
 - **v0.0.5** (2026-04-16): Glyph opcode walker, `output_script_is_regular` relaxation for Glyph
 - **v0.0.3** (2026-04-15): `hashOutputHashes` preimage field (first mainnet-accepted Ledger-signed Radiant tx)
