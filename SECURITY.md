@@ -119,6 +119,23 @@ Previously: a script with `OP_PUSHDATA4` declaring a 4GB payload could wrap the 
 
 `Electron-Wallet@radiant-ledger-512` (the patched host wallet) does not yet recognize Glyph-prefixed P2PKH UTXOs. Users spending Glyph UTXOs must use the CLI harness documented in `radiant-ledger-guide`. Tracked as two issues on the `Electron-Wallet` repo.
 
+## Known Accepted Risks — Dependency Advisories
+
+Dependabot has two open alerts on `tests/requirements.txt`. Both are knowingly left open (not dismissed) so they remain visible, but the project's position is that neither warrants code change. Tracked in [issue #9](https://github.com/Zyrtnin-org/app-radiant/issues/9) on this repo.
+
+### `ecdsa` — Minerva timing attack on P-256 (HIGH, GHSA / alert #1)
+
+- **Affected range:** all versions. **Patched version:** none — upstream has not released a fix.
+- **Why left open:** this dependency is only loaded inside the Speculos emulator test harness on developer machines. No network adversary has timing access to those runs, so the side-channel threat does not apply in this context.
+- **Tripwire for reassessment:** if `python-ecdsa` ever ships a patched release, or if this dependency moves out of `tests/` into non-test code, re-evaluate.
+
+### `ecdsa` — DoS via improper DER length validation (MEDIUM, alert #2)
+
+- **Affected range:** `< 0.19.2`. **Patched version:** `0.19.2`.
+- **Why not bumped:** the pin `ecdsa>=0.16.1,<0.17.0` is inherited verbatim from upstream `LedgerHQ/app-bitcoin` and is validated by Ledger's `ragger` test framework. Widening the ceiling would diverge from upstream and complicate future syncs. The patched `0.19.2` is outside the pin and has not been vetted against `ragger`.
+- **Why tolerable:** test-only dependency, attacker-controlled input to `ecdsa.from_der()` does not exist in this harness — test fixtures are author-written.
+- **Tripwire for reassessment:** if upstream LedgerHQ widens the pin, mirror them. If any non-test code starts consuming `ecdsa`, close this risk immediately.
+
 ## Verification / Reproducibility
 
 ### Cross-check the published binary
