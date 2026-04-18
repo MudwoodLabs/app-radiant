@@ -121,7 +121,7 @@ Previously: a script with `OP_PUSHDATA4` declaring a 4GB payload could wrap the 
 
 ## Known Accepted Risks — Dependency Advisories
 
-Dependabot has two open alerts on `tests/requirements.txt`. Both are knowingly left open (not dismissed) so they remain visible, but the project's position is that neither warrants code change. Tracked in issue [#ECDSA-TESTS] on this repo.
+Dependabot has two open alerts on `tests/requirements.txt`. Both are knowingly left open (not dismissed) so they remain visible, but the project's position is that neither warrants code change. Tracked in [issue #9](https://github.com/Zyrtnin-org/app-radiant/issues/9) on this repo.
 
 ### `ecdsa` — Minerva timing attack on P-256 (HIGH, GHSA / alert #1)
 
