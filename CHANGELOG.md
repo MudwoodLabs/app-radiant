@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+---
+
+## Radiant fork (community) — `appVersion` ≠ upstream `APPVERSION_*` numbers
+
+## [0.0.5-security-fixes] — 2026-04-20 (pre-release)
+
+**Scope**: security-audit remediation. Audit was AI-assisted (five parallel reviewers); report: [`SECURITY_AUDIT_2026-04-20.md`](https://github.com/Zyrtnin-org/Electron-Wallet/blob/glyph-ft-all/SECURITY_AUDIT_2026-04-20.md). No second human reviewer on the diffs yet — pre-release status pending community code review.
+
+### Security
+
+- **B3** (`lib-app-bitcoin` 0967950): `check_output_displayable` now calls `output_script_p2pkh_offset` for the change-address memcmp offset. For 63-byte Glyph-wrapped P2PKH outputs (`d8|d0 <ref36> 75 76a914 <pkh20> 88ac`), the pkh is at offset 42; the old hardcoded `OUTPUT_SCRIPT_REGULAR_PRE_LENGTH=4` landed inside the push-ref region. An attacker who knew the victim's change-pkh could embed those 20 bytes inside a crafted ref, causing the firmware to mark a funded output as change (`displayable=false`) — silently hidden from on-device review while still counted in `totalOutputAmount`. Fund-diversion class.
+
+### Known unfixed audit findings (pre-release caveats)
+
+- **H1** — short-script classifier spoofing via stale `currentOutput` bytes in `output_script_is_regular` / `output_script_p2pkh_offset` (requires plumbing `scriptSize` to the helpers).
+- **M5** — `discardTransaction` echoes up to 200 bytes of attacker-supplied `currentOutput` back to host in the error APDU reply.
+- **M6** — `output_script_is_op_return` reads `buffer[1]` / `buffer[2]` without length check (0-byte script OOB).
+- **M9** — `bip44_derivation_guard` operator-precedence bug in the ternary expression (upstream-inherited).
+
+### Wallet side (`Zyrtnin-org/Electron-Wallet@glyph-ft-all`)
+
+- **B1** — wallet-side `Transaction.verify_signature` against the locally-recomputed sighash for every input before applying the device signature. Pre-broadcast detection of any wallet↔firmware sighash divergence.
+- **B2** — fix per-output refsHash sort to raw byte-lex (matches firmware `memcmp` and Python oracle). Prior reversed-byte sort happened to agree on single-ref outputs; first multi-ref output would have failed consensus.
+- **B4** — hard-fail in `add_input_info` when the parent tx of a Glyph input isn't in the wallet store. Previously fell back silently to `p2pkh` type → tx signed locally but rejected at mempool.
+- **B5** — 8-test `TestGlyphNftCommands` suite mirroring the FT command tests.
+
+---
+
+## [0.0.4-glyph-ft-transfer] — 2026-04-20
+
+### Added
+
+- `MAX_OUTPUT_TO_CHECK` raised from 100 → 200 in `lib-app-bitcoin/context.h`. Enables 3-output Glyph FT transfers (recipient + FT change + RXD change).
+- Diagnostic SW codes `0x6FB1..0x6FB5` per `handle_output_state` reject branch.
+
+### Mainnet proofs after this release
+
+- [`5d5b2600d0…f047390`](https://explorer.radiantblockchain.org/tx/5d5b2600d0f06c35f67778f8f103a8b8ff86bef49d99d7172afc6db12f047390) — first Ledger-signed Glyph FT transfer (3-output)
+- [`a323dfc543…15a3be1`](https://explorer.radiantblockchain.org/tx/a323dfc543834eaf035a273b2d0b9f545683085c8ec7202af0e25a16715a3be1) — first wallet-integrated Ledger-signed NFT transfer
+
+---
+
+## [0.0.3-sighash-fix] — 2026-04-15
+
+### Fixed
+
+- Radiant `hashOutputHashes` sighash preimage insertion between `hashSequence` and `hashOutputs`. First post-fix mainnet Ledger-signed Radiant tx: [`de3574979f…56893743`](https://explorer.radiantblockchain.org/tx/de3574979f986616b4152c4294b85562318292490d3587d8fe32aff456893743).
+
+---
+
+## Upstream LedgerHQ/app-bitcoin history (pre-fork)
+
 ## [2.4.10] - 2026-02-19
 
 ### Modified
