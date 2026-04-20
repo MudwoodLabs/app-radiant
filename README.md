@@ -8,9 +8,15 @@ Hardware-wallet signing for the Radiant blockchain. Private keys stay on-device.
 
 ## Status: BETA
 
-First mainnet-confirmed Radiant transaction signed by this app: [`de3574979f986616b4152c4294b85562318292490d3587d8fe32aff456893743`](https://explorer.radiantblockchain.org/tx/de3574979f986616b4152c4294b85562318292490d3587d8fe32aff456893743) (block 420762, 2026-04-15).
+Mainnet proofs — all three asset classes signed by this app:
 
-Current tag: **`v0.0.3-sighash-fix`**
+| Asset | First Ledger-signed mainnet tx | Date |
+| --- | --- | --- |
+| Plain RXD | [`de3574979f…56893743`](https://explorer.radiantblockchain.org/tx/de3574979f986616b4152c4294b85562318292490d3587d8fe32aff456893743) | 2026-04-15 |
+| Glyph NFT singleton | [`af0cd27d9c…6201c9`](https://explorer.radiantblockchain.org/tx/af0cd27d9cda2113cc9882274ff7015f09f759ffe8b71b0c17e86c64fb6201c9) | 2026-04-16 |
+| Glyph FT transfer (3-output, with FT change) | [`5d5b2600d0…f047390`](https://explorer.radiantblockchain.org/tx/5d5b2600d0f06c35f67778f8f103a8b8ff86bef49d99d7172afc6db12f047390) | 2026-04-20 |
+
+Current tag: **`v0.0.4-glyph-ft-transfer`**
 
 Community-distributed. Not reviewed by Ledger. The device will show a persistent **"This app is not genuine"** banner when the app is open — that is expected for any unsigned community-built Ledger app and cannot be removed.
 
@@ -24,10 +30,15 @@ Community-distributed. Not reviewed by Ledger. The device will show a persistent
 - Integration with a [patched Electron Radiant](https://github.com/Zyrtnin-org/Electron-Wallet/tree/radiant-ledger-512) (branch `radiant-ledger-512`)
 - Reproducible CI builds; SHA256s published on every release
 
+## What works (v0.0.4 additions)
+
+- **Glyph NFT transfers** (63-byte singleton template)
+- **Glyph FT transfers** — full-balance sends (2 outputs) and partial sends with FT change (3+ outputs), via `MAX_OUTPUT_TO_CHECK=200` buffer
+
 ## What doesn't work yet (v2 scope)
 
-- Glyph / NFT signing (device rejects outputs containing `OP_PUSHINPUTREF*` opcodes)
 - P2SH destinations (`3…` addresses) and OP_RETURN memos
+- Glyph dMint / mint-authority spends (≥241-byte scripts exceed `MAX_OUTPUT_TO_CHECK`)
 - Nano X, Stax, Flex
 
 ## Important: derivation path differs from Samara/Electron/Chainbow
@@ -51,7 +62,7 @@ Build the app (requires Docker, ~2GB builder image download on first run):
 ```bash
 git clone --recurse-submodules https://github.com/Zyrtnin-org/app-radiant.git
 cd app-radiant
-git checkout v0.0.3-sighash-fix
+git checkout v0.0.4-glyph-ft-transfer
 git submodule update --init --recursive
 
 docker run --rm \
@@ -74,7 +85,7 @@ python3 -m ledgerblue.loadApp \
   --appFlags 0x0 \
   --fileName bin/app.hex \
   --appName "Radiant" \
-  --appVersion "0.0.3" \
+  --appVersion "0.0.4" \
   --dataSize 512 \
   --installparamsSize 64 \
   --delete
