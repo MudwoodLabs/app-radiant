@@ -16,7 +16,7 @@ Mainnet proofs — all three asset classes signed by this app:
 | Glyph NFT singleton | [`af0cd27d9c…6201c9`](https://explorer.radiantblockchain.org/tx/af0cd27d9cda2113cc9882274ff7015f09f759ffe8b71b0c17e86c64fb6201c9) | 2026-04-16 |
 | Glyph FT transfer (3-output, with FT change) | [`5d5b2600d0…f047390`](https://explorer.radiantblockchain.org/tx/5d5b2600d0f06c35f67778f8f103a8b8ff86bef49d99d7172afc6db12f047390) | 2026-04-20 |
 
-Current tag: **`v0.0.4-glyph-ft-transfer`**
+Current tag: **`v0.0.5-security-fixes`**
 
 Community-distributed. Not reviewed by Ledger. The device will show a persistent **"This app is not genuine"** banner when the app is open — that is expected for any unsigned community-built Ledger app and cannot be removed.
 
@@ -29,6 +29,11 @@ Community-distributed. Not reviewed by Ledger. The device will show a persistent
 - **SLIP-44 coin type 512**, BIP44 derivation path `m/44'/512'/0'/0/x`
 - Integration with a [patched Electron Radiant](https://github.com/Zyrtnin-org/Electron-Wallet/tree/radiant-ledger-512) (branch `radiant-ledger-512`)
 - Reproducible CI builds; SHA256s published on every release
+
+## What works (v0.0.5 additions)
+
+- **Security audit remediation** — see Electron-Wallet's `SECURITY_AUDIT_2026-04-20.md`. Fixes `check_output_displayable` to use the Glyph-wrapper-aware `output_script_p2pkh_offset` helper instead of a hardcoded offset, closing a class of change-address matching bug where attacker-crafted ref bytes could trick the firmware into hiding a funded output from the user's on-device review.
+- **Unique diagnostic SW codes** (0x6FB1..0x6FB5) per `handle_output_state` reject branch, so hosts can distinguish firmware-reject reasons without a PRINTF-enabled build.
 
 ## What works (v0.0.4 additions)
 
@@ -62,7 +67,7 @@ Build the app (requires Docker, ~2GB builder image download on first run):
 ```bash
 git clone --recurse-submodules https://github.com/Zyrtnin-org/app-radiant.git
 cd app-radiant
-git checkout v0.0.4-glyph-ft-transfer
+git checkout v0.0.5-security-fixes
 git submodule update --init --recursive
 
 docker run --rm \
@@ -85,7 +90,7 @@ python3 -m ledgerblue.loadApp \
   --appFlags 0x0 \
   --fileName bin/app.hex \
   --appName "Radiant" \
-  --appVersion "0.0.4" \
+  --appVersion "0.0.5" \
   --dataSize 512 \
   --installparamsSize 64 \
   --delete
