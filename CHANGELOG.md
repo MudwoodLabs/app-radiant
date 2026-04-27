@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Radiant fork (community) — `appVersion` ≠ upstream `APPVERSION_*` numbers
 
+## [0.0.8-glyph-transfer] — 2026-04-26 (pre-release)
+
+**Scope**: Additional security fixes from the 2026-04-20 AI-assisted audit, plus closure of the Glyph NFT transfer-preserving spend path. All fixes are in `lib-app-bitcoin` (`radiant-v1` branch, `a7f6195`..`d169caa`, tagged `v0.0.8-glyph-transfer`).
+
+### Security
+
+- **M3** (`a7f6195`): `output_script_is_regular` and `output_script_p2pkh_offset` both matched `0xD0` (Glyph FT shape) alongside `0xD8` (NFT singleton). FT outputs don't carry a pkh at the same offset as NFT outputs; any on-device review or change-address match on an FT output used the wrong offset. Fix: restrict both helpers to `0xD8` only. FT support deferred to v0.0.9.
+
+- **M1** (`ea60dc2`): `output_script_p2pkh_offset` decoded `buffer[1..4]` without first checking `buffer[0] >= 0x19`. A script shorter than 25 bytes could reach the offset path. Fix: return 0 if `buffer[0] < 0x19`.
+
+- **M6 / L2** (`32528c8`): `output_script_is_op_return` read `buffer[1]` and `buffer[2]` without verifying the script length. A 0-byte or 1-byte script caused an out-of-bounds read. Fix: return 0 if `buffer[0] == 0`. Closes the M6 audit finding listed in v0.0.5.
+
+- **L1** (`d169caa`): `hash_input_finalize_full.c` had a change-detection fallback that set `addressOffset = OUTPUT_SCRIPT_REGULAR_PRE_LENGTH` (4) when `output_script_p2pkh_offset` returned 0, then still ran the 20-byte `memcmp`. An unrecognized output shape could accidentally match the change address at the wrong offset. Fix: gate the `memcmp` on `addressOffset != 0`; unrecognized shapes are now correctly skipped as non-change candidates.
+
+### Changed
+
+- **L3** (`7e40367`): Corrected misleading comments in `output_script_is_regular` that said scripts of "any length" were accepted; the `buffer[0] >= 0x19` minimum-length check is now documented accurately.
+
+### Known unfixed audit findings (pre-release caveats)
+
+- **H1** — short-script classifier spoofing via stale `currentOutput` bytes in `output_script_is_regular` / `output_script_p2pkh_offset` (requires plumbing `scriptSize` to the helpers).
+- **M5** — `discardTransaction` echoes up to 200 bytes of attacker-supplied `currentOutput` back to host in the error APDU reply.
+- **M9** — `bip44_derivation_guard` operator-precedence bug in the ternary expression (upstream-inherited).
+
+### Mainnet proofs after this release
+
+- [`af0cd27d…6201c9`](https://explorer.radiantblockchain.org/tx/af0cd27d6201c9) — first Ledger-signed Glyph NFT transfer-preserving spend (singleton ref carried forward to output)
+
+---
+
 ## [0.0.5-security-fixes] — 2026-04-20 (pre-release)
 
 **Scope**: security-audit remediation. Audit was AI-assisted (five parallel reviewers); report: [`SECURITY_AUDIT_2026-04-20.md`](https://github.com/Zyrtnin-org/Electron-Wallet/blob/glyph-ft-all/SECURITY_AUDIT_2026-04-20.md). No second human reviewer on the diffs yet — pre-release status pending community code review.
