@@ -2,7 +2,7 @@
 
 This is a fork of [`LedgerHQ/app-bitcoin`](https://github.com/LedgerHQ/app-bitcoin) that builds a Radiant (RXD) variant. v1 target: Ledger Nano S Plus.
 
-See [`../radiant-ledger-app`](https://github.com/Zyrtnin-org/radiant-ledger-app) for the plan and design docs.
+See [`../radiant-ledger-app`](https://github.com/MudwoodLabs/radiant-ledger-app) for the plan and design docs.
 
 ---
 
@@ -11,7 +11,7 @@ See [`../radiant-ledger-app`](https://github.com/Zyrtnin-org/radiant-ledger-app)
 Requires Docker. Apple Silicon: add `--platform linux/amd64`.
 
 ```bash
-git clone --recurse-submodules git@github.com:Zyrtnin-org/app-radiant.git
+git clone --recurse-submodules git@github.com:MudwoodLabs/app-radiant.git
 cd app-radiant
 
 # Pinned builder image digest (multi-arch index, resolved 2026-04-15)
@@ -34,7 +34,7 @@ sha256sum bin/app.hex bin/app.elf
 | Artifact | Pin | Notes |
 |---|---|---|
 | Builder image | `sha256:b82bfff7862d890ea0c931f310ed1e9bce6efe2fac32986a2561aaa08bfc2834` | multi-arch index digest of `ledger-app-builder-lite:latest` as of 2026-04-15 |
-| `lib-app-bitcoin` submodule | `8b28f6687e94abc4bb88cd648ba1f9e1b6dd1b63` | tracks fork `Zyrtnin-org/lib-app-bitcoin` (mirror of upstream as of fork date; Phase 1 will add the Radiant C diff here) |
+| `lib-app-bitcoin` submodule | `8b28f6687e94abc4bb88cd648ba1f9e1b6dd1b63` | tracks fork `MudwoodLabs/lib-app-bitcoin` (mirror of upstream as of fork date; Phase 1 will add the Radiant C diff here) |
 | `ledger-app-workflows` | `2ddae7bf080353584b77bd1356c8909c5b8f8257` | pinned by commit SHA in `.github/workflows/*.yml`, not `@v1` tag |
 
 ## Verifying a release
@@ -61,4 +61,4 @@ The Ledger reusable workflow (`reusable_build.yml`) hardcodes `:latest` when pul
 - `PYTHONHASHSEED=0`, `PYTHONDONTWRITEBYTECODE=1` — for any Python tools invoked during build.
 - Submodule SHA drift — `git submodule update --init --recursive` before every release build.
 
-See [the plan](https://github.com/Zyrtnin-org/radiant-ledger-app/blob/main/docs/plans/2026-04-14-feat-radiant-ledger-app-v1-plan.md) for the full rationale.
+See [the plan](https://github.com/MudwoodLabs/radiant-ledger-app/blob/main/docs/plans/2026-04-14-feat-radiant-ledger-app-v1-plan.md) for the full rationale.

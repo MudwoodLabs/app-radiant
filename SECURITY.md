@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document describes the threat model and known limitations of the community-built Radiant Ledger Nano S Plus app (`Zyrtnin-org/app-radiant`). Applies to v0.0.6 beta and later until superseded.
+This document describes the threat model and known limitations of the community-built Radiant Ledger Nano S Plus app (`MudwoodLabs/app-radiant`). Applies to v0.0.6 beta and later until superseded.
 
 ## Reporting a Vulnerability
 
@@ -47,7 +47,7 @@ A malicious host that asks for a signature under `m/44'/0'/...` (BTC) or `m/44'/
 
 The device's `hashOutputHashes` computation matches the radiantjs reference implementation and Radiant mainnet consensus. Triple-validated:
 
-- **Python oracle** ([`radiant-ledger-app/scripts/radiant_preimage_oracle.py`](https://github.com/Zyrtnin-org/radiant-ledger-app/blob/main/scripts/radiant_preimage_oracle.py)) — port of radiantjs `sighash.js` + `script.js`.
+- **Python oracle** ([`radiant-ledger-app/scripts/radiant_preimage_oracle.py`](https://github.com/MudwoodLabs/radiant-ledger-app/blob/main/scripts/radiant_preimage_oracle.py)) — port of radiantjs `sighash.js` + `script.js`.
 - **18 mainnet fixtures verified** — published ECDSA signatures from 5 real mainnet txs verify against oracle-computed sighashes.
 - **Device-vs-oracle hardware tests** — plain P2PKH and Glyph-output signing both produce signatures that verify against the oracle.
 
@@ -121,7 +121,7 @@ Previously: a script with `OP_PUSHDATA4` declaring a 4GB payload could wrap the 
 
 ## Known Accepted Risks — Dependency Advisories
 
-Dependabot has two open alerts on `tests/requirements.txt`. Both are knowingly left open (not dismissed) so they remain visible, but the project's position is that neither warrants code change. Tracked in [issue #9](https://github.com/Zyrtnin-org/app-radiant/issues/9) on this repo.
+Dependabot has two open alerts on `tests/requirements.txt`. Both are knowingly left open (not dismissed) so they remain visible, but the project's position is that neither warrants code change. Tracked in [issue #9](https://github.com/MudwoodLabs/app-radiant/issues/9) on this repo.
 
 ### `ecdsa` — Minerva timing attack on P-256 (HIGH, GHSA / alert #1)
 
@@ -180,8 +180,8 @@ python3 test_device_glyph_sign.py   # Glyph output — sig verifies against orac
 
 ## References
 
-- [`radiant-ledger-guide` troubleshooting section](https://github.com/Zyrtnin-org/radiant-ledger-guide#10-troubleshooting) — SW code table
-- [`radiant-ledger-app/docs/solutions/`](https://github.com/Zyrtnin-org/radiant-ledger-app/tree/main/docs/solutions) — compound fix docs including all security findings from v0.0.5 → v0.0.6 hardening
+- [`radiant-ledger-guide` troubleshooting section](https://github.com/MudwoodLabs/radiant-ledger-guide#10-troubleshooting) — SW code table
+- [`radiant-ledger-app/docs/solutions/`](https://github.com/MudwoodLabs/radiant-ledger-app/tree/main/docs/solutions) — compound fix docs including all security findings from v0.0.5 → v0.0.6 hardening
 - [radiant-node consensus source](https://github.com/RadiantBlockchain/radiant-node) — canonical reference for Radiant sighash + opcode semantics
 
 ## Version History

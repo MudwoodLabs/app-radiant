@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.0.5-security-fixes] — 2026-04-20 (pre-release)
 
-**Scope**: security-audit remediation. Audit was AI-assisted (five parallel reviewers); report: [`SECURITY_AUDIT_2026-04-20.md`](https://github.com/Zyrtnin-org/Electron-Wallet/blob/glyph-ft-all/SECURITY_AUDIT_2026-04-20.md). No second human reviewer on the diffs yet — pre-release status pending community code review.
+**Scope**: security-audit remediation. Audit was AI-assisted (five parallel reviewers); report: [`SECURITY_AUDIT_2026-04-20.md`](https://github.com/MudwoodLabs/Electron-Wallet/blob/glyph-ft-all/SECURITY_AUDIT_2026-04-20.md). No second human reviewer on the diffs yet — pre-release status pending community code review.
 
 ### Security
 
@@ -54,7 +54,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **M6** — `output_script_is_op_return` reads `buffer[1]` / `buffer[2]` without length check (0-byte script OOB).
 - **M9** — `bip44_derivation_guard` operator-precedence bug in the ternary expression (upstream-inherited).
 
-### Wallet side (`Zyrtnin-org/Electron-Wallet@glyph-ft-all`)
+### Wallet side (`MudwoodLabs/Electron-Wallet@glyph-ft-all`)
 
 - **B1** — wallet-side `Transaction.verify_signature` against the locally-recomputed sighash for every input before applying the device signature. Pre-broadcast detection of any wallet↔firmware sighash divergence.
 - **B2** — fix per-output refsHash sort to raw byte-lex (matches firmware `memcmp` and Python oracle). Prior reversed-byte sort happened to agree on single-ref outputs; first multi-ref output would have failed consensus.

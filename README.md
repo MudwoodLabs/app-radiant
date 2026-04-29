@@ -27,7 +27,7 @@ Community-distributed. Not reviewed by Ledger. The device will show a persistent
 - **Nano S Plus** — other devices not supported yet
 - **P2PKH sends and receives** (standard `1…` Radiant addresses)
 - **SLIP-44 coin type 512**, BIP44 derivation path `m/44'/512'/0'/0/x`
-- Integration with a [patched Electron Radiant](https://github.com/Zyrtnin-org/Electron-Wallet/tree/radiant-ledger-512) (branch `radiant-ledger-512`)
+- Integration with a [patched Electron Radiant](https://github.com/MudwoodLabs/Electron-Wallet/tree/radiant-ledger-512) (branch `radiant-ledger-512`)
 - Reproducible CI builds; SHA256s published on every release
 
 ## What works (v0.0.5 additions)
@@ -65,7 +65,7 @@ wget -q -O - https://raw.githubusercontent.com/LedgerHQ/udev-rules/master/add_ud
 Build the app (requires Docker, ~2GB builder image download on first run):
 
 ```bash
-git clone --recurse-submodules https://github.com/Zyrtnin-org/app-radiant.git
+git clone --recurse-submodules https://github.com/MudwoodLabs/app-radiant.git
 cd app-radiant
 git checkout v0.0.5-security-fixes
 git submodule update --init --recursive
@@ -100,7 +100,7 @@ Approve prompts on-device ("Allow unsafe manager" then "Install app Radiant from
 
 ## Use with Electron Radiant
 
-Patched plugin lives at [`Zyrtnin-org/Electron-Wallet@radiant-ledger-512`](https://github.com/Zyrtnin-org/Electron-Wallet/tree/radiant-ledger-512). Clone, run from source, wizard defaults will pick up `m/44'/512'/0'` automatically.
+Patched plugin lives at [`MudwoodLabs/Electron-Wallet@radiant-ledger-512`](https://github.com/MudwoodLabs/Electron-Wallet/tree/radiant-ledger-512). Clone, run from source, wizard defaults will pick up `m/44'/512'/0'` automatically.
 
 **Important workflow order**: open the Radiant app on the device BEFORE you open the wallet in Electron Radiant. If the device is on the dashboard when Electron Radiant tries to talk to it, you'll get an `SW 6702` error.
 
@@ -112,9 +112,9 @@ Have a Nano S Plus and some spare RXD? Open an issue here or ping on the Radiant
 
 ## Related repos
 
-- [`Zyrtnin-org/lib-app-bitcoin`](https://github.com/Zyrtnin-org/lib-app-bitcoin) branch `radiant-v1` — submodule with the `hashOutputHashes` C implementation
-- [`Zyrtnin-org/Electron-Wallet`](https://github.com/Zyrtnin-org/Electron-Wallet) branch `radiant-ledger-512` — host-side wallet plugin
-- [`Zyrtnin-org/radiant-ledger-app`](https://github.com/Zyrtnin-org/radiant-ledger-app) — planning, Python oracle, golden-vector fixtures, investigation notes
+- [`MudwoodLabs/lib-app-bitcoin`](https://github.com/MudwoodLabs/lib-app-bitcoin) branch `radiant-v1` — submodule with the `hashOutputHashes` C implementation
+- [`MudwoodLabs/Electron-Wallet`](https://github.com/MudwoodLabs/Electron-Wallet) branch `radiant-ledger-512` — host-side wallet plugin
+- [`MudwoodLabs/radiant-ledger-app`](https://github.com/MudwoodLabs/radiant-ledger-app) — planning, Python oracle, golden-vector fixtures, investigation notes
 
 ---
 
@@ -122,7 +122,7 @@ Have a Nano S Plus and some spare RXD? Open an issue here or ping on the Radiant
 
 Radiant's signature preimage inserts a 32-byte `hashOutputHashes` field between `nSequence` and `hashOutputs` ([`radiant-node/src/script/interpreter.cpp:2636-2650`](https://github.com/RadiantBlockchain/radiant-node/blob/master/src/script/interpreter.cpp#L2636)). BCH's signing path doesn't produce this field, so stock BCH-family Ledger apps produce signatures that Radiant mainnet rejects.
 
-This app's C diff extends `lib-app-bitcoin` to compute `hashOutputHashes` on-device from the streaming output bytes it already hashes for the standard `hashedOutputs` field. Zero additional host-trust introduced. Full arc documented at [`radiant-ledger-app`](https://github.com/Zyrtnin-org/radiant-ledger-app).
+This app's C diff extends `lib-app-bitcoin` to compute `hashOutputHashes` on-device from the streaming output bytes it already hashes for the standard `hashedOutputs` field. Zero additional host-trust introduced. Full arc documented at [`radiant-ledger-app`](https://github.com/MudwoodLabs/radiant-ledger-app).
 
 ---
 
